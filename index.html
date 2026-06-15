@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>「桩探」——上海市充电设施跨运营商运行监测与决策支持平台 v3.1</title>
+<title>「桩探」——上海市充电设施跨运营商运行监测与决策支持平台 v3.2</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -138,7 +138,7 @@ body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;bac
     <span data-tab="verify">补贴核验</span>
     <span data-tab="report">数据报告</span>
   </div>
-  <div class="user">数据更新：<span id="clock"></span><span class="ver">v3.1</span></div>
+  <div class="user">数据更新：<span id="clock"></span><span class="ver">v3.2</span></div>
 </div>
 
 <div class="main">
@@ -463,7 +463,7 @@ body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;bac
 </div><!-- /main -->
 
 <div class="footbar">
-  <span>「桩探」v3.1 · 上海市充电设施跨运营商运行监测与决策支持平台 · SODA 2026</span>
+  <span>「桩探」v3.2 · 上海市充电设施跨运营商运行监测与决策支持平台 · SODA 2026</span>
   <span>数据来源：D1市级平台 + D2运营商公开API + D3地图开放平台 + D4 12345 + D5公开评论 | 不含任何个人隐私数据</span>
 </div>
 
@@ -492,7 +492,7 @@ document.querySelectorAll('#navLinks span').forEach(s=>{
 // Leaflet 地图1：供需热力
 // =============================================================
 var map1=L.map('map').setView([31.23,121.47],11);
-L.tileLayer('https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; 智图GeoQ | 自然资源部',maxZoom:18}).addTo(map1);
+L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:'1234',attribution:'&copy; 高德地图',maxZoom:18}).addTo(map1);
 
 // 模拟网格数据点
 var gridData=[
@@ -534,7 +534,7 @@ gridData.forEach(function(d){
 // Leaflet 地图2：低效桩归因
 // =============================================================
 var map2=L.map('map2').setView([31.23,121.47],11);
-L.tileLayer('https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; 智图GeoQ | 自然资源部',maxZoom:18}).addTo(map2);
+L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:'1234',attribution:'&copy; 高德地图',maxZoom:18}).addTo(map2);
 
 var attrData=[
   {lat:31.16,lng:121.42,type:'fault',name:'闵行某充电站',reason:'充电模块故障，离线14天'},
