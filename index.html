@@ -489,7 +489,7 @@ document.querySelectorAll('#navLinks span').forEach(s=>{
 // Leaflet 地图1：供需热力
 // =============================================================
 var map1=L.map('map').setView([31.23,121.47],11);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',maxZoom:18}).addTo(map1);
+L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:'1234',attribution:'&copy; 高德地图',maxZoom:18}).addTo(map1);
 
 // 模拟网格数据点
 var gridData=[
@@ -531,7 +531,7 @@ gridData.forEach(function(d){
 // Leaflet 地图2：低效桩归因
 // =============================================================
 var map2=L.map('map2').setView([31.23,121.47],11);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',maxZoom:18}).addTo(map2);
+L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:'1234',attribution:'&copy; 高德地图',maxZoom:18}).addTo(map2);
 
 var attrData=[
   {lat:31.16,lng:121.42,type:'fault',name:'闵行某充电站',reason:'充电模块故障，离线14天'},
