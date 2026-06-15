@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>「桩探」——上海市充电设施跨运营商运行监测与决策支持平台</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;background:#f5f6f8;color:#2c3e50;font-size:14px;min-height:100vh}
+
+/* ===== 顶部导航 ===== */
+.topbar{background:#fff;height:52px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid #e8ecf1;justify-content:space-between;position:sticky;top:0;z-index:1000;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.topbar .brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;color:#1a2332}
+.topbar .brand .dot{width:10px;height:10px;background:#3b82f6;border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.topbar .nav-links{display:flex;gap:4px}
+.topbar .nav-links span{cursor:pointer;padding:10px 18px;font-size:13px;color:#64748b;border-radius:6px;transition:all 0.2s;white-space:nowrap;font-weight:500}
+.topbar .nav-links span:hover{color:#3b82f6;background:#eff6ff}
+.topbar .nav-links span.active{color:#3b82f6;background:#eff6ff;font-weight:600}
+.topbar .user{font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px}
+.topbar .user .ver{background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:11px}
+
+/* ===== 主内容区 ===== */
+.main{padding:20px 24px;max-width:1520px;margin:0 auto}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ===== 统计卡片行 ===== */
+.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:18px}
+.stat-card{background:#fff;border-radius:8px;padding:16px 14px;border:1px solid #e8ecf1;text-align:center;transition:box-shadow 0.2s}
+.stat-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.stat-card .val{font-size:28px;font-weight:700;line-height:1.2}
+.stat-card .lbl{font-size:11px;color:#94a3b8;margin-top:4px;letter-spacing:0.5px}
+.stat-card .chg{font-size:10px;margin-top:3px}
+.chg-up{color:#10b981}.chg-down{color:#ef4444}.chg-warn{color:#f59e0b}
+
+/* ===== 网格布局 ===== */
+.grid{display:grid;gap:16px;margin-bottom:16px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-2r{grid-template-columns:2fr 1fr}
+.grid-2l{grid-template-columns:1fr 2fr}
+
+.card{background:#fff;border-radius:8px;border:1px solid #e8ecf1;overflow:hidden}
+.card-hd{padding:14px 18px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:#1e293b}
+.card-bd{padding:14px}
+.card-bd0{padding:0}
+
+.chart{width:100%}
+.chart.h420{height:420px}.chart.h360{height:360px}.chart.h300{height:300px}.chart.h260{height:260px}.chart.h220{height:220px}
+
+/* ===== 表格 ===== */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:#f8fafc;color:#64748b;font-weight:600;padding:9px 12px;border-bottom:2px solid #e8ecf1;text-align:left;font-size:11px;letter-spacing:0.3px}
+.tbl td{padding:8px 12px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:top}
+.tbl tr:hover td{background:#f8fafc}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap}
+.badge-r{background:#fef2f2;color:#ef4444}
+.badge-o{background:#fffbeb;color:#f59e0b}
+.badge-g{background:#f0fdf4;color:#10b981}
+.badge-b{background:#eff6ff;color:#3b82f6}
+.badge-p{background:#f5f3ff;color:#8b5cf6}
+
+/* ===== Map ===== */
+#map,#map2{width:100%;height:450px;border-radius:4px}
+.legend-inline{display:flex;gap:20px;font-size:11px;color:#64748b;padding:10px 14px;flex-wrap:wrap}
+.legend-inline .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+
+/* ===== 报告卡片（咨询报告风格） ===== */
+.rpt-section{margin-bottom:24px}
+.rpt-section h3{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e8ecf1;display:flex;align-items:center;gap:8px}
+.rpt-section h3 .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#3b82f6;color:#fff;font-size:12px;font-weight:700}
+.rpt-card{background:#fafbfc;border:1px solid #e8ecf1;border-radius:8px;padding:20px;margin-bottom:14px}
+.rpt-card h4{font-size:13px;font-weight:600;color:#334155;margin-bottom:10px}
+.rpt-card p{font-size:12px;color:#64748b;line-height:1.8}
+.rpt-num{font-size:24px;font-weight:700;color:#3b82f6}
+.rpt-insight{background:#eff6ff;border-left:3px solid #3b82f6;padding:10px 14px;margin:10px 0;font-size:12px;color:#1e40af;border-radius:0 6px 6px 0}
+.rpt-warn{background:#fef2f2;border-left:3px solid #ef4444;padding:10px 14px;margin:10px 0;font-size:12px;color:#991b1b;border-radius:0 6px 6px 0}
+
+/* ===== 报告导出面板 ===== */
+.export-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.export-card{background:#fff;border:2px solid #e8ecf1;border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s}
+.export-card:hover{border-color:#3b82f6;box-shadow:0 4px 12px rgba(59,130,246,0.1)}
+.export-card .icon{font-size:28px;margin-bottom:8px}
+.export-card .title{font-size:13px;font-weight:600;color:#1e293b;margin-bottom:4px}
+.export-card .desc{font-size:11px;color:#94a3b8}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#f1f5f9}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+
+/* ===== 筛选栏 ===== */
+.filter-bar{display:flex;gap:10px;align-items:center;padding:4px 0;font-size:12px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{border:1px solid #d1d5db;border-radius:5px;padding:5px 10px;font-size:12px;color:#334155;background:#fff}
+.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.1)}
+
+/* ===== 底部 ===== */
+.footbar{background:#fff;border-top:1px solid #e8ecf1;padding:10px 24px;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between}
+
+/* ===== 归因标签 ===== */
+.tag-row{display:flex;gap:6px;flex-wrap:wrap}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap}
+.tag-comp{background:#fef2f2;color:#ef4444}
+.tag-access{background:#fffbeb;color:#f59e0b}
+.tag-biz{background:#f5f3ff;color:#8b5cf6}
+.tag-price{background:#f0fdf4;color:#10b981}
+.tag-fault{background:#fff1f2;color:#e11d48}
+
+/* ===== 进度条 ===== */
+.bar-wrap{background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;margin-top:4px}
+.bar-fill{border-radius:4px;height:100%}
+
+/* 响应式 */
+@media(max-width:1200px){
+  .stat-row{grid-template-columns:repeat(3,1fr)}
+  .grid-2,.grid-2r,.grid-2l{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .export-panel{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>桩探 · 上海市充电设施跨运营商运行监测与决策支持平台</div>
+  <div class="nav-links" id="navLinks">
+    <span class="active" data-tab="supply">供需全景</span>
+    <span data-tab="attribution">低效归因</span>
+    <span data-tab="verify">补贴核验</span>
+    <span data-tab="report">数据报告</span>
+  </div>
+  <div class="user">数据更新：<span id="clock"></span><span class="ver">v3.0</span></div>
+</div>
+
+<div class="main">
+
+<!-- ================================================================ -->
+<!-- TAB 1: 供需全景 -->
+<!-- ================================================================ -->
+<div class="tab-content active" id="tab-supply">
+
+<div class="stat-row">
+  <div class="stat-card"><div class="val" style="color:#3b82f6;">23.1<span style="font-size:16px">万</span></div><div class="lbl">监测充电桩总数</div><div class="chg chg-up">覆盖全市12家运营商</div></div>
+  <div class="stat-card"><div class="val" style="color:#ef4444;">23<span style="font-size:16px">个</span></div><div class="lbl">供给不足网格</div><div class="chg chg-down">供需比&lt;0.5，需重点关注</div></div>
+  <div class="stat-card"><div class="val" style="color:#f59e0b;">37<span style="font-size:16px">个</span></div><div class="lbl">供给偏紧网格</div><div class="chg chg-warn">供需比0.5–0.8</div></div>
+  <div class="stat-card"><div class="val" style="color:#10b981;">1.7<span style="font-size:16px">:1</span></div><div class="lbl">全市车桩比</div><div class="chg chg-up">全国领先水平</div></div>
+  <div class="stat-card"><div class="val" style="color:#3b82f6;">68<span style="font-size:16px">%</span></div><div class="lbl">整体利用率</div><div class="chg chg-up">较上季度+2.3%</div></div>
+  <div class="stat-card"><div class="val" style="color:#8b5cf6;">16<span style="font-size:16px">个</span></div><div class="lbl">供给过剩网格</div><div class="lbl" style="color:#94a3b8">供需比>1.2，建议限制新建</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-hd"><span>上海市1km×1km网格充电供需热力图</span><span class="badge badge-b">模块A · 跨运营商融合</span></div>
+    <div class="card-bd0"><div id="map"></div>
+      <div class="legend-inline">
+        <span><span class="dot" style="background:#ef4444"></span>供给严重不足（供需比&lt;0.5）</span>
+        <span><span class="dot" style="background:#f59e0b"></span>供给偏紧（0.5–0.8）</span>
+        <span><span class="dot" style="background:#10b981"></span>供需平衡（0.8–1.2）</span>
+        <span><span class="dot" style="background:#3b82f6"></span>供给过剩（>1.2）</span>
+        <span style="margin-left:auto;color:#94a3b8;font-size:10px">数据来源：D1政府充电量 + D3地图POI + D2运营商公开API</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span>各区供需平衡详表</span><span class="badge badge-o">每季度更新</span></div>
+    <div class="card-bd" style="padding:6px 10px;max-height:500px;overflow-y:auto">
+      <table class="tbl"><thead><tr><th>区域</th><th>公共桩数</th><th>日均充电量(万度)</th><th>车桩比估算</th><th>供需比</th><th>状态</th><th>建议</th></tr></thead>
+        <tr><td>浦东新区</td><td class="num">62,100</td><td class="num">48.5</td><td class="num">1.4:1</td><td class="num">1.15</td><td><span class="badge badge-g">平衡</span></td><td>存量优化，局部调整</td></tr>
+        <tr><td>闵行区</td><td class="num">28,300</td><td class="num">22.1</td><td class="num">1.8:1</td><td class="num">0.72</td><td><span class="badge badge-o">偏紧</span></td><td>优先修复低效桩</td></tr>
+        <tr><td>宝山区</td><td class="num">19,800</td><td class="num">14.3</td><td class="num">2.0:1</td><td class="num">0.63</td><td><span class="badge badge-o">偏紧</span></td><td>存量优化+适度新建</td></tr>
+        <tr><td>松江区</td><td class="num">16,200</td><td class="num">10.8</td><td class="num">2.2:1</td><td class="num">0.48</td><td><span class="badge badge-r">严重不足</span></td><td>新建选址优先区域</td></tr>
+        <tr><td>嘉定区</td><td class="num">18,500</td><td class="num">14.1</td><td class="num">1.7:1</td><td class="num">0.81</td><td><span class="badge badge-g">平衡</span></td><td>维持现状</td></tr>
+        <tr><td>杨浦区</td><td class="num">11,400</td><td class="num">8.9</td><td class="num">1.9:1</td><td class="num">0.68</td><td><span class="badge badge-o">偏紧</span></td><td>存量优化优先</td></tr>
+        <tr><td>青浦区</td><td class="num">14,700</td><td class="num">9.6</td><td class="num">2.3:1</td><td class="num">0.55</td><td><span class="badge badge-o">偏紧</span></td><td>存量+新建并行</td></tr>
+        <tr><td>奉贤区</td><td class="num">12,900</td><td class="num">8.2</td><td class="num">2.4:1</td><td class="num">0.51</td><td><span class="badge badge-o">偏紧</span></td><td>存量优化优先</td></tr>
+        <tr><td>徐汇区</td><td class="num">10,800</td><td class="num">9.8</td><td class="num">1.3:1</td><td class="num">1.21</td><td><span class="badge badge-b">过剩</span></td><td>建议限制新建</td></tr>
+        <tr><td>长宁区</td><td class="num">9,200</td><td class="num">8.1</td><td class="num">1.3:1</td><td class="num">1.18</td><td><span class="badge badge-g">平衡</span></td><td>维持现状</td></tr>
+    </table>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-3">
+  <div class="card"><div class="card-hd"><span>供需比月度趋势（全市）</span></div><div class="card-bd"><div class="chart h260" id="chSupplyTrend"></div></div></div>
+  <div class="card"><div class="card-hd"><span>各运营商供给占比（匿名化）</span><span class="badge badge-b">跨运营商视角</span></div><div class="card-bd"><div class="chart h260" id="chOperatorShare"></div></div></div>
+  <div class="card"><div class="card-hd"><span>高峰时段（18-22时）供给缺口</span></div><div class="card-bd"><div class="chart h260" id="chPeakGap"></div></div></div>
+</div>
+
+</div><!-- /tab-supply -->
+
+<!-- ================================================================ -->
+<!-- TAB 2: 低效归因 -->
+<!-- ================================================================ -->
+<div class="tab-content" id="tab-attribution">
+
+<div class="stat-row">
+  <div class="stat-card"><div class="val" style="color:#ef4444;">1,847<span style="font-size:16px">个</span></div><div class="lbl">识别低效桩</div><div class="chg chg-down">占总量8.0%，需关注</div></div>
+  <div class="stat-card"><div class="val" style="color:#f59e0b;">623</div><div class="lbl">设备故障类</div><div class="lbl" style="color:#94a3b8">通知运营商修复</div></div>
+  <div class="stat-card"><div class="val" style="color:#8b5cf6;">418</div><div class="lbl">周边竞争类</div><div class="lbl" style="color:#94a3b8">竞品冲击导致分流</div></div>
+  <div class="stat-card"><div class="val" style="color:#f59e0b;">356</div><div class="lbl">可达性下降类</div><div class="lbl" style="color:#94a3b8">道路/出入口变化</div></div>
+  <div class="stat-card"><div class="val" style="color:#8b5cf6;">280</div><div class="lbl">业态变化类</div><div class="lbl" style="color:#94a3b8">周边商业/人口减少</div></div>
+  <div class="stat-card"><div class="val" style="color:#10b981;">170</div><div class="lbl">价格因素类</div><div class="lbl" style="color:#94a3b8">收费高于周边均值</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-hd"><span>低效桩地理分布 —— 按归因类型着色</span><span class="badge badge-p">模块B · 五维度归因</span></div>
+    <div class="card-bd0"><div id="map2"></div>
+      <div class="legend-inline">
+        <span><span class="dot" style="background:#e11d48"></span>设备故障</span>
+        <span><span class="dot" style="background:#ef4444"></span>周边竞争</span>
+        <span><span class="dot" style="background:#f59e0b"></span>可达性下降</span>
+        <span><span class="dot" style="background:#8b5cf6"></span>业态变化</span>
+        <span><span class="dot" style="background:#10b981"></span>价格因素</span>
+        <span style="margin-left:auto;color:#94a3b8;font-size:10px">归因基于D1-D5多源数据交叉分析</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span>低效桩清单 —— 五维度归因标签</span><div class="filter-bar"><select id="attrFilter" onchange="filterAttrTable()"><option value="">全部归因类型</option><option>设备故障</option><option>周边竞争</option><option>可达性下降</option><option>业态变化</option><option>价格因素</option></select><select id="districtAttrFilter" onchange="filterAttrTable()"><option value="">全部区域</option><option>浦东新区</option><option>闵行区</option><option>宝山区</option><option>松江区</option><option>嘉定区</option></select></div></div>
+    <div class="card-bd" style="padding:6px 10px;max-height:500px;overflow-y:auto">
+      <table class="tbl" id="attrTable"><thead><tr><th>站点名称</th><th>区域</th><th>运营商</th><th>日均充电(kWh)</th><th>区域均值(kWh)</th><th>偏离度</th><th>归因标签</th><th>建议</th></tr></thead><tbody id="attrTbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-3">
+  <div class="card"><div class="card-hd"><span>归因类型分布（近30天）</span></div><div class="card-bd"><div class="chart h260" id="chAttrPie"></div></div></div>
+  <div class="card"><div class="card-hd"><span>低效桩月度趋势</span></div><div class="card-bd"><div class="chart h260" id="chAttrTrend"></div></div></div>
+  <div class="card"><div class="card-hd"><span>归因方法论说明</span></div><div class="card-bd" style="font-size:12px;line-height:1.8">
+    <p style="font-weight:600;margin-bottom:6px">外部归因 ≠ 内部传感器诊断</p>
+    <p style="color:#64748b">运营商传感器能告诉你<b>"桩坏了"</b>（内部故障），但不能告诉你：</p>
+    <p style="color:#64748b;margin-top:4px">① <b>周边竞争</b>：500m范围内是否有新开竞品桩？</p>
+    <p style="color:#64748b">② <b>可达性变化</b>：是否有道路施工挡住了入口？</p>
+    <p style="color:#64748b">③ <b>业态变化</b>：周边商业/办公/居住是否在减少？</p>
+    <p style="color:#64748b">④ <b>价格因素</b>：收费是否高于周边同类桩均价？</p>
+    <p style="margin-top:8px;color:#3b82f6;font-weight:600">→ 这四种外部归因是运营商AI模型看不到的，也是桩探的核心差异化价值。</p>
+  </div></div>
+</div>
+
+<div class="card" style="margin-top:0">
+  <div class="card-hd"><span>存量优先决策逻辑</span><span class="badge badge-g">机制创新</span></div>
+  <div class="card-bd" style="font-size:12px;line-height:2.2;color:#334155">
+    <p>平台在识别出供给不足区域后，强制执行"先检视存量、再建议增量"的决策路径：</p>
+    <p style="margin-left:16px">❶ 该区域是否存在低效桩？（是 → ❷，否 → ❹）</p>
+    <p style="margin-left:16px">❷ 归因类别 —— <span style="color:#e11d48">设备故障类</span>（可修复）？还是 <span style="color:#8b5cf6">选址问题类</span>（难以修复）？</p>
+    <p style="margin-left:16px">❸ 设备故障类：通知运营商修复，预计修复后供给可提升 <b>X%</b></p>
+    <p style="margin-left:16px">❹ 若修复后仍不足缺口的60%，或低效桩均为选址问题，则触发新建选址推荐</p>
+    <p style="margin-top:8px;color:#64748b">该机制旨在减少"一边建新桩、一边老桩闲置"的资源错配，是平台区别于纯技术工具的核心治理创新。</p>
+  </div>
+</div>
+
+</div><!-- /tab-attribution -->
+
+<!-- ================================================================ -->
+<!-- TAB 3: 补贴核验 -->
+<!-- ================================================================ -->
+<div class="tab-content" id="tab-verify">
+
+<div class="stat-row">
+  <div class="stat-card"><div class="val" style="color:#3b82f6;">12<span style="font-size:16px">家</span></div><div class="lbl">接入运营商</div><div class="chg chg-up">D1政府平台全覆盖</div></div>
+  <div class="stat-card"><div class="val" style="color:#ef4444;">8.3<span style="font-size:16px">%</span></div><div class="lbl">申报偏离度>15%的站点</div><div class="chg chg-down">共1,924个站点</div></div>
+  <div class="stat-card"><div class="val" style="color:#f59e0b;">3.1<span style="font-size:16px">%</span></div><div class="lbl">申报偏离度10-15%的站点</div><div class="chg chg-warn">共716个站点</div></div>
+  <div class="stat-card"><div class="val" style="color:#10b981;">88.6<span style="font-size:16px">%</span></div><div class="lbl">申报与基准一致</div><div class="chg chg-up">共20,460个站点</div></div>
+  <div class="stat-card"><div class="val" style="color:#ef4444;">47<span style="font-size:16px">个</span></div><div class="lbl">状态矛盾站点</div><div class="chg chg-down">API显示故障但有充电记录</div></div>
+  <div class="stat-card"><div class="val" style="color:#3b82f6;">季度</div><div class="lbl">核验报告周期</div><div class="lbl" style="color:#94a3b8">自动生成</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-hd"><span>运营商申报 vs D1基准偏离度分布</span><span class="badge badge-r">模块C · 交叉验证</span></div>
+    <div class="card-bd"><div class="chart h360" id="chDeviation"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span>异常申报站点清单</span><span class="badge badge-r">需重点关注</span></div>
+    <div class="card-bd" style="padding:6px 10px;max-height:420px;overflow-y:auto">
+      <table class="tbl"><thead><tr><th>站点名称</th><th>运营商</th><th>申报充电量(万kWh)</th><th>D1基准(万kWh)</th><th>偏离度</th><th>验证信号</th><th>建议</th></tr></thead>
+        <tr>
+          <td>闵行浦江充电站A</td><td>运营商X</td><td class="num">12.5</td><td class="num">8.9</td><td class="num"><span style="color:#ef4444;font-weight:700">+40.4%</span></td>
+          <td><span class="tag tag-fault">API状态矛盾</span></td>
+          <td><span class="badge badge-r">重点核查</span></td>
+        </tr>
+        <tr>
+          <td>松江九亭充电站B</td><td>运营商Y</td><td class="num">8.2</td><td class="num">8.0</td><td class="num"><span style="color:#10b981">+2.5%</span></td><td>—</td><td><span class="badge badge-g">正常</span></td>
+        </tr>
+        <tr>
+          <td>宝山顾村充电站C</td><td>运营商X</td><td class="num">6.8</td><td class="num">4.2</td><td class="num"><span style="color:#ef4444;font-weight:700">+61.9%</span></td>
+          <td><span class="tag tag-fault">时序异常</span><span class="tag tag-comp">投诉集中</span></td>
+          <td><span class="badge badge-r">重点核查</span></td>
+        </tr>
+        <tr>
+          <td>嘉定安亭充电站D</td><td>运营商Z</td><td class="num">15.1</td><td class="num">14.8</td><td class="num"><span style="color:#10b981">+2.0%</span></td><td>—</td><td><span class="badge badge-g">正常</span></td>
+        </tr>
+        <tr>
+          <td>青浦徐泾充电站E</td><td>运营商Y</td><td class="num">5.4</td><td class="num">3.8</td><td class="num"><span style="color:#ef4444;font-weight:700">+42.1%</span></td>
+          <td><span class="tag tag-fault">空间偏离</span></td>
+          <td><span class="badge badge-r">重点核查</span></td>
+        </tr>
+        <tr>
+          <td>奉贤南桥充电站F</td><td>运营商Z</td><td class="num">9.8</td><td class="num">9.6</td><td class="num"><span style="color:#10b981">+2.1%</span></td><td>—</td><td><span class="badge badge-g">正常</span></td>
+        </tr>
+        <tr>
+          <td>浦东张江充电站G</td><td>运营商X</td><td class="num">18.2</td><td class="num">13.1</td><td class="num"><span style="color:#ef4444;font-weight:700">+38.9%</span></td>
+          <td><span class="tag tag-fault">API状态矛盾</span><span class="tag tag-comp">投诉集中</span></td>
+          <td><span class="badge badge-r">重点核查</span></td>
+        </tr>
+        <tr>
+          <td>杨浦五角场充电站H</td><td>运营商Y</td><td class="num">11.3</td><td class="num">11.1</td><td class="num"><span style="color:#10b981">+1.8%</span></td><td>—</td><td><span class="badge badge-g">正常</span></td>
+        </tr>
+    </table>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-3">
+  <div class="card"><div class="card-hd"><span>四维交叉验证逻辑</span></div><div class="card-bd" style="font-size:12px;line-height:2">
+    <p><b>① 时序一致性</b></p><p style="color:#64748b">运营商月度申报 vs D1平台充电量趋势 → 偏离>15%标记</p>
+    <p style="margin-top:6px"><b>② 状态一致性</b></p><p style="color:#64748b">API显示"故障"的桩却有充电记录 → 直接异常</p>
+    <p style="margin-top:6px"><b>③ 空间一致性</b></p><p style="color:#64748b">区域申报总量 vs 区域D1充电总量 → 区域级偏离</p>
+    <p style="margin-top:6px"><b>④ 用户信号校验</b></p><p style="color:#64748b">负面投诉骤增的充电桩 → 充电量是否异常下降</p>
+  </div></div>
+  <div class="card"><div class="card-hd"><span>各运营商偏离度对比（匿名化）</span></div><div class="card-bd"><div class="chart h260" id="chOpDeviation"></div></div></div>
+  <div class="card"><div class="card-hd"><span>月度异常站点趋势</span></div><div class="card-bd"><div class="chart h260" id="chAbnormalTrend"></div></div></div>
+</div>
+
+</div><!-- /tab-verify -->
+
+<!-- ================================================================ -->
+<!-- TAB 4: 数据报告（核心页面） -->
+<!-- ================================================================ -->
+<div class="tab-content" id="tab-report">
+
+<!-- 报告导出面板 -->
+<div class="export-panel">
+  <div class="export-card">
+    <div class="icon">📊</div>
+    <div class="title">L1 · 运行状态总览</div>
+    <div class="desc">全市充电设施季度总览<br>3-5页 · PDF · 每季度</div>
+  </div>
+  <div class="export-card">
+    <div class="icon">🗺️</div>
+    <div class="title">L2 · 区域供需分析</div>
+    <div class="desc">各区/网格供需热力详析<br>8-12页 · PDF · 每季度</div>
+  </div>
+  <div class="export-card">
+    <div class="icon">🔍</div>
+    <div class="title">L3 · 低效站点归因</div>
+    <div class="desc">站点级归因分析+处理建议<br>按需生成 · PDF+XLSX · 每月</div>
+  </div>
+  <div class="export-card">
+    <div class="icon">🛡️</div>
+    <div class="title">L4 · 补贴核验报告</div>
+    <div class="desc">运营商申报偏离度量化<br>5-8页 · PDF · 每季度</div>
+  </div>
+</div>
+
+<!-- 报告预览：L1 总览 -->
+<div class="rpt-section">
+  <h3><span class="num">1</span> 核心摘要 —— 2026年Q2上海市充电设施运行状态</h3>
+
+  <div class="stat-row" style="margin-bottom:14px">
+    <div class="stat-card"><div class="val" style="color:#3b82f6;">1,280<span style="font-size:16px">万</span></div><div class="lbl">Q2总充电量(kWh)</div><div class="chg chg-up">同比+18.3%</div></div>
+    <div class="stat-card"><div class="val" style="color:#10b981;">0.82</div><div class="lbl">全市供需比均值</div><div class="chg chg-up">较Q1 +0.04</div></div>
+    <div class="stat-card"><div class="val" style="color:#f59e0b;">91.4<span style="font-size:16px">%</span></div><div class="lbl">补贴申报合规率</div><div class="chg chg-up">较Q1 +1.7%</div></div>
+    <div class="stat-card"><div class="val" style="color:#ef4444;">1,847</div><div class="lbl">低效桩数量</div><div class="chg chg-down">较Q1 +5.2%</div></div>
+    <div class="stat-card"><div class="val" style="color:#8b5cf6;">23<span style="font-size:16px">个</span></div><div class="lbl">供给不足网格</div><div class="chg chg-down">较Q1 -3个（治理见效）</div></div>
+    <div class="stat-card"><div class="val" style="color:#3b82f6;">47<span style="font-size:16px">个</span></div><div class="lbl">交叉验证标记异常</div><div class="chg chg-warn">需重点核查</div></div>
+  </div>
+
+  <div class="rpt-insight">
+    <b>📌 核心发现：</b>Q2上海市充电设施运行整体平稳，但三个信号值得关注——① 松江、青浦、奉贤三区供给不足加剧（供需比<0.55），② 低效桩总量连续两个季度上升（+5.2%），其中"周边竞争"归因占比跃升至22.6%，反映运营商之间存量竞争加剧，③ 47个站点存在申报与D1基准严重偏离（>15%）且伴随API状态矛盾，建议Q3重点核查。
+  </div>
+</div>
+
+<!-- 报告预览：L2 区域分析 -->
+<div class="rpt-section">
+  <h3><span class="num">2</span> 区域充电供需深度分析</h3>
+
+  <div class="grid grid-2">
+    <div class="card"><div class="card-hd"><span>供需比月度变化（Q2各月）</span></div><div class="card-bd"><div class="chart h300" id="chRptSupply"></div></div></div>
+    <div class="card"><div class="card-hd"><span>供给不足网格 —— 存量优化 vs 增量扩张建议</span></div>
+    <div class="card-bd" style="padding:6px 10px">
+      <table class="tbl"><thead><tr><th>网格编号</th><th>所在区域</th><th>供需比</th><th>可修复低效桩</th><th>修复后供需比</th><th>建议路径</th></tr></thead>
+        <tr><td>SH-SJ-003</td><td>松江九亭</td><td class="num"><span style="color:#ef4444;font-weight:700">0.42</span></td><td class="num">18个</td><td class="num">0.61</td><td><span class="badge badge-o">存量优化+适度新建</span></td></tr>
+        <tr><td>SH-QP-007</td><td>青浦徐泾</td><td class="num"><span style="color:#ef4444;font-weight:700">0.45</span></td><td class="num">12个</td><td class="num">0.58</td><td><span class="badge badge-o">存量优化+适度新建</span></td></tr>
+        <tr><td>SH-FX-011</td><td>奉贤南桥</td><td class="num"><span style="color:#f59e0b;font-weight:700">0.51</span></td><td class="num">22个</td><td class="num">0.72</td><td><span class="badge badge-g">存量优化即可</span></td></tr>
+        <tr><td>SH-MH-005</td><td>闵行浦江</td><td class="num"><span style="color:#f59e0b;font-weight:700">0.53</span></td><td class="num">8个</td><td class="num">0.59</td><td><span class="badge badge-o">存量优化+适度新建</span></td></tr>
+        <tr><td>SH-BS-002</td><td>宝山顾村</td><td class="num"><span style="color:#f59e0b;font-weight:700">0.56</span></td><td class="num">15个</td><td class="num">0.68</td><td><span class="badge badge-g">存量优化即可</span></td></tr>
+    </table>
+    </div></div>
+  </div>
+</div>
+
+<!-- 报告预览：L3+L4 -->
+<div class="rpt-section">
+  <h3><span class="num">3</span> 低效桩归因与补贴核验</h3>
+
+  <div class="grid grid-2">
+    <div class="card"><div class="card-hd"><span>低效桩归因类型占比变化（Q1 vs Q2）</span></div><div class="card-bd"><div class="chart h300" id="chRptAttr"></div></div></div>
+    <div class="card">
+      <div class="card-hd"><span>补贴核验关键结论</span></div>
+      <div class="card-bd" style="font-size:12px;line-height:2">
+        <div class="rpt-warn">
+          <b>⚠ 重点关注：</b>运营商X在闵行、松江、浦东三区共31个站点申报偏离度>30%，且其中12个站点D2公开API显示"故障"状态——存在"假运营、真申报"的嫌疑。建议发改部门Q3重点核查。
+        </div>
+        <table class="tbl" style="margin-top:10px"><thead><tr><th>核验维度</th><th>Q2结果</th><th>Q1结果</th><th>变化</th></tr></thead>
+          <tr><td>偏离>15%站点占比</td><td class="num"><span style="color:#ef4444">8.3%</span></td><td class="num">9.6%</td><td class="num"><span style="color:#10b981">↓1.3%</span></td></tr>
+          <tr><td>API状态矛盾站点</td><td class="num">47个</td><td class="num">52个</td><td class="num"><span style="color:#10b981">↓5个</span></td></tr>
+          <tr><td>投诉集中站点核验</td><td class="num">完成89个</td><td class="num">完成76个</td><td class="num"><span style="color:#3b82f6">↑13个</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 报告预览：决策建议 -->
+<div class="rpt-section">
+  <h3><span class="num">4</span> 决策建议</h3>
+
+  <div class="rpt-card">
+    <h4>建议一：优先推动存量低效桩修复（财务影响：约1,200万元）</h4>
+    <p>Q2识别出623个设备故障类低效桩（可通过维修恢复），其中418个位于供给不足或偏紧网格内。建议政府督促运营商在Q3内完成修复。按单桩修复后年充电量提升约2万kWh、度电补贴0.5元/kWh计，<b>修复后预计新增充电量约1,246万kWh/年，对应补贴资金约623万元</b>——但更重要的是，这些桩的修复可使5个供给不足网格的供需比回升至0.6以上，减少新建需求约300个桩位，<b>节省新建投资约1,500-2,400万元</b>。</p>
+  </div>
+
+  <div class="rpt-card">
+    <h4>建议二：Q3重点核查运营商X的31个异常站点（财务影响：约900万元补贴资金）</h4>
+    <p>运营商X有31个站点Q2申报偏离度>30%，涉及补贴金额估算约900万元。建议发改部门Q3对该运营商开展专项核查，以D1平台充电量数据为基准进行交叉验证。若核实为虚报，追回对应补贴并调整其信用评级。</p>
+  </div>
+
+  <div class="rpt-card">
+    <h4>建议三：松江九亭、青浦徐泾启动新建选址前期工作</h4>
+    <p>两个网格供需比分别为0.42和0.45，即便完成存量修复后仍不足0.65。建议启动模块D新建选址评分，在Q3内完成选址调研。预估新建需求约200-280个桩位，总投资约1,000-2,240万元。</p>
+  </div>
+</div>
+
+<!-- 数据质量 -->
+<div class="rpt-section">
+  <h3><span class="num">5</span> 数据质量与平台运行状态</h3>
+  <div class="card">
+    <div class="card-bd">
+    <table class="tbl"><thead><tr><th>数据源</th><th>完整率</th><th>及时率</th><th>准确率</th><th>覆盖范围</th><th>运行状态</th></tr></thead>
+      <tr><td>D1 市级充电量平台</td><td><span style="color:#10b981">99.2%</span></td><td><span style="color:#10b981">日更新正常</span></td><td><span style="color:#10b981">98.5%</span></td><td>全市23.1万桩</td><td><span class="badge badge-g">正常</span></td></tr>
+      <tr><td>D2 运营商公开API</td><td><span style="color:#f59e0b">87.3%</span></td><td><span style="color:#10b981">实时</span></td><td><span style="color:#f59e0b">85.1%</span></td><td>头部运营商全覆盖</td><td><span class="badge badge-o">部分不稳定</span></td></tr>
+      <tr><td>D3 高德/百度地图POI</td><td><span style="color:#10b981">98.8%</span></td><td><span style="color:#10b981">准实时</span></td><td><span style="color:#10b981">94.0%</span></td><td>全市POI</td><td><span class="badge badge-g">正常</span></td></tr>
+      <tr><td>D4 12345投诉</td><td><span style="color:#10b981">100%</span></td><td><span style="color:#10b981">日更新</span></td><td><span style="color:#f59e0b">88.5%</span></td><td>充电桩类投诉</td><td><span class="badge badge-o">部分无桩ID关联</span></td></tr>
+      <tr><td>D5 公开用户评论</td><td><span style="color:#f59e0b">72.0%</span></td><td><span style="color:#f59e0b">按需采集</span></td><td><span style="color:#f59e0b">78.3%</span></td><td>多平台公开内容</td><td><span class="badge badge-o">样本量有限</span></td></tr>
+    </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /tab-report -->
+
+</div><!-- /main -->
+
+<div class="footbar">
+  <span>「桩探」v3.0 · 上海市充电设施跨运营商运行监测与决策支持平台 · SODA 2026</span>
+  <span>数据来源：D1市级平台 + D2运营商公开API + D3地图开放平台 + D4 12345 + D5公开评论 | 不含任何个人隐私数据</span>
+</div>
+
+<script>
+// =============================================================
+// 时钟
+// =============================================================
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleString('zh-CN')}
+tick();setInterval(tick,1000);
+
+// =============================================================
+// Tab 切换
+// =============================================================
+document.querySelectorAll('#navLinks span').forEach(s=>{
+  s.addEventListener('click',function(){
+    document.querySelectorAll('#navLinks span').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+    document.getElementById('tab-'+this.dataset.tab).classList.add('active');
+    // 切换tab后resize图表
+    setTimeout(resizeAllCharts,100);
+  });
+});
+
+// =============================================================
+// Leaflet 地图1：供需热力
+// =============================================================
+var map1=L.map('map').setView([31.23,121.47],11);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',maxZoom:18}).addTo(map1);
+
+// 模拟网格数据点
+var gridData=[
+  // 供给不足(红)
+  {lat:31.15,lng:121.23,type:'shortage',name:'松江九亭',ratio:0.42},
+  {lat:31.13,lng:121.28,type:'shortage',name:'青浦徐泾',ratio:0.45},
+  {lat:31.20,lng:121.35,type:'shortage',name:'闵行浦江镇南',ratio:0.48},
+  {lat:31.28,lng:121.38,type:'shortage',name:'宝山顾村西',ratio:0.49},
+  // 偏紧(橙)
+  {lat:31.18,lng:121.42,type:'tight',name:'闵行莘庄',ratio:0.55},
+  {lat:31.32,lng:121.42,type:'tight',name:'宝山杨行',ratio:0.58},
+  {lat:31.25,lng:121.50,type:'tight',name:'浦东金桥',ratio:0.62},
+  {lat:31.08,lng:121.30,type:'tight',name:'松江新城',ratio:0.65},
+  {lat:31.35,lng:121.25,type:'tight',name:'嘉定新城',ratio:0.68},
+  // 平衡(绿)
+  {lat:31.23,lng:121.47,type:'balanced',name:'浦东陆家嘴',ratio:0.95},
+  {lat:31.20,lng:121.43,type:'balanced',name:'徐汇田林',ratio:1.05},
+  {lat:31.22,lng:121.40,type:'balanced',name:'长宁天山',ratio:1.10},
+  {lat:31.27,lng:121.52,type:'balanced',name:'浦东花木',ratio:0.92},
+  // 过剩(蓝)
+  {lat:31.19,lng:121.45,type:'excess',name:'徐汇漕河泾',ratio:1.35},
+  {lat:31.21,lng:121.39,type:'excess',name:'长宁虹桥',ratio:1.28},
+];
+
+var typeColors={shortage:'#ef4444',tight:'#f59e0b',balanced:'#10b981',excess:'#3b82f6'};
+gridData.forEach(function(d){
+  L.circleMarker([d.lat,d.lng],{
+    radius: d.type==='shortage'?10:d.type==='tight'?8:6,
+    color:typeColors[d.type],
+    fillColor:typeColors[d.type],
+    fillOpacity:0.55,
+    weight:1.5
+  }).bindPopup('<b>'+d.name+'</b><br>供需比：'+d.ratio+'<br>'+
+    (d.type==='shortage'?'⚠ 供给严重不足':d.type==='tight'?'供给偏紧':d.type==='excess'?'供给过剩':'供需平衡'))
+  .addTo(map1);
+});
+
+// =============================================================
+// Leaflet 地图2：低效桩归因
+// =============================================================
+var map2=L.map('map2').setView([31.23,121.47],11);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',maxZoom:18}).addTo(map2);
+
+var attrData=[
+  {lat:31.16,lng:121.42,type:'fault',name:'闵行某充电站',reason:'充电模块故障，离线14天'},
+  {lat:31.24,lng:121.50,type:'fault',name:'浦东某充电站',reason:'屏幕碎裂，4枪仅1枪可用'},
+  {lat:31.30,lng:121.38,type:'compete',name:'宝山某充电站',reason:'500m内新开竞品站，价格低0.3元/度'},
+  {lat:31.19,lng:121.35,type:'compete',name:'青浦某充电站',reason:'周边新增12个快充桩，分流严重'},
+  {lat:31.09,lng:121.25,type:'access',name:'松江某充电站',reason:'入口道路施工封闭，需绕行1.2km'},
+  {lat:31.33,lng:121.43,type:'access',name:'宝山某充电站',reason:'停车场入口改为单行道，进出困难'},
+  {lat:31.26,lng:121.37,type:'biz',name:'嘉定某充电站',reason:'周边办公楼空置率上升，通勤充电需求减半'},
+  {lat:31.15,lng:121.50,type:'biz',name:'浦东某充电站',reason:'周边商场停业，购物充电需求归零'},
+  {lat:31.22,lng:121.32,type:'price',name:'闵行某充电站',reason:'收费2.1元/度，周边均价1.5元/度'},
+  {lat:31.28,lng:121.48,type:'fault',name:'浦东某充电站',reason:'充电枪老化，实际功率仅为标称40%'},
+  {lat:31.12,lng:121.38,type:'compete',name:'闵行某充电站',reason:'竞品站开业促销，免费充电1个月'},
+  {lat:31.35,lng:121.30,type:'access',name:'嘉定某充电站',reason:'周边道路改为步行街，车辆无法进入'},
+];
+
+var attrColors={fault:'#e11d48',compete:'#ef4444',access:'#f59e0b',biz:'#8b5cf6',price:'#10b981'};
+var attrLabels={fault:'设备故障',compete:'周边竞争',access:'可达性下降',biz:'业态变化',price:'价格因素'};
+attrData.forEach(function(d){
+  L.circleMarker([d.lat,d.lng],{
+    radius:7,
+    color:attrColors[d.type],
+    fillColor:attrColors[d.type],
+    fillOpacity:0.6,
+    weight:1.5
+  }).bindPopup('<b>'+d.name+'</b><br>归因：'+attrLabels[d.type]+'<br>'+d.reason).addTo(map2);
+});
+
+// =============================================================
+// 归因列表数据
+// =============================================================
+var attrList=[
+  {station:'闵行某充电站A',district:'闵行区',operator:'运营商X',daily:38,avg:165,dev:'-77%',tags:['设备故障'],tagCls:['tag-fault'],action:'通知运营商紧急修复'},
+  {station:'宝山某充电站B',district:'宝山区',operator:'运营商Y',daily:42,avg:158,dev:'-73%',tags:['周边竞争'],tagCls:['tag-comp'],action:'评估差异化定价策略'},
+  {station:'松江某充电站C',district:'松江区',operator:'运营商Z',daily:55,avg:172,dev:'-68%',tags:['可达性下降','业态变化'],tagCls:['tag-access','tag-biz'],action:'协调交通部门评估'},
+  {station:'浦东某充电站D',district:'浦东新区',operator:'运营商X',daily:210,avg:380,dev:'-45%',tags:['设备故障'],tagCls:['tag-fault'],action:'通知运营商修复枪体'},
+  {station:'青浦某充电站E',district:'青浦区',operator:'运营商Y',daily:35,avg:142,dev:'-75%',tags:['周边竞争','价格因素'],tagCls:['tag-comp','tag-price'],action:'评估价格+服务差异化'},
+  {station:'嘉定某充电站F',district:'嘉定区',operator:'运营商Z',daily:48,avg:155,dev:'-69%',tags:['业态变化'],tagCls:['tag-biz'],action:'观察3个月，若持续下降建议撤点'},
+  {station:'奉贤某充电站G',district:'奉贤区',operator:'运营商X',daily:62,avg:140,dev:'-56%',tags:['可达性下降'],tagCls:['tag-access'],action:'协调改善进出通道'},
+  {station:'杨浦某充电站H',district:'杨浦区',operator:'运营商Y',daily:88,avg:175,dev:'-50%',tags:['价格因素'],tagCls:['tag-price'],action:'建议调价至区域均价'},
+  {station:'浦东某充电站I',district:'浦东新区',operator:'运营商Z',daily:95,avg:360,dev:'-74%',tags:['周边竞争','设备故障'],tagCls:['tag-comp','tag-fault'],action:'修复设备+评估竞争策略'},
+  {station:'闵行某充电站J',district:'闵行区',operator:'运营商X',daily:28,avg:168,dev:'-83%',tags:['可达性下降'],tagCls:['tag-access'],action:'周边道路施工预计2月后恢复'},
+];
+
+function renderAttrTable(data){
+  var html='';
+  data.forEach(function(r){
+    var tagsHtml=r.tags.map(function(t,i){return '<span class="tag '+r.tagCls[i]+'">'+t+'</span>'}).join(' ');
+    html+='<tr><td>'+r.station+'</td><td>'+r.district+'</td><td>'+r.operator+'</td><td class="num">'+r.daily+'</td><td class="num">'+r.avg+'</td><td class="num"><span style="color:#ef4444;font-weight:600">'+r.dev+'</span></td><td>'+tagsHtml+'</td><td>'+r.action+'</td></tr>';
+  });
+  document.getElementById('attrTbody').innerHTML=html;
+}
+renderAttrTable(attrList);
+
+function filterAttrTable(){
+  var type=document.getElementById('attrFilter').value;
+  var district=document.getElementById('districtAttrFilter').value;
+  var filtered=attrList.filter(function(r){
+    if(type && !r.tags.includes(type)) return false;
+    if(district && r.district!==district) return false;
+    return true;
+  });
+  renderAttrTable(filtered);
+}
+
+// =============================================================
+// ECharts 初始化
+// =============================================================
+var allCharts=[];
+
+function initChart(domId,option){
+  var dom=document.getElementById(domId);
+  if(!dom) return null;
+  var chart=echarts.init(dom);
+  chart.setOption(option);
+  allCharts.push(chart);
+  return chart;
+}
+
+function resizeAllCharts(){
+  allCharts.forEach(function(c){try{c.resize()}catch(e){}});
+}
+window.addEventListener('resize',function(){setTimeout(resizeAllCharts,150)});
+
+// 通用颜色
+var C={blue:'#3b82f6',red:'#ef4444',orange:'#f59e0b',green:'#10b981',purple:'#8b5cf6',gray:'#94a3b8',dark:'#1e293b'};
+
+// ---- 供需比月度趋势 ----
+initChart('chSupplyTrend',{
+  tooltip:{trigger:'axis'},
+  legend:{data:['全市均值','松江','青浦','奉贤'],bottom:0},
+  grid:{left:50,right:20,top:15,bottom:30},
+  xAxis:{type:'category',data:['1月','2月','3月','4月','5月','6月'],axisLabel:{fontSize:10}},
+  yAxis:{type:'value',name:'供需比',min:0.3,max:1.3,axisLabel:{fontSize:10}},
+  series:[
+    {name:'全市均值',type:'line',data:[0.78,0.80,0.79,0.81,0.80,0.82],lineStyle:{color:C.blue},itemStyle:{color:C.blue},symbol:'circle',symbolSize:6},
+    {name:'松江',type:'line',data:[0.52,0.50,0.48,0.46,0.44,0.42],lineStyle:{color:C.red},itemStyle:{color:C.red},symbol:'circle',symbolSize:6},
+    {name:'青浦',type:'line',data:[0.58,0.56,0.54,0.50,0.48,0.45],lineStyle:{color:C.orange},itemStyle:{color:C.orange},symbol:'circle',symbolSize:6},
+    {name:'奉贤',type:'line',data:[0.60,0.58,0.56,0.54,0.52,0.51],lineStyle:{color:C.purple},itemStyle:{color:C.purple},symbol:'circle',symbolSize:6}
+  ]
+});
+
+// ---- 运营商供给占比 ----
+initChart('chOperatorShare',{
+  tooltip:{trigger:'item'},
+  legend:{bottom:0},
+  series:[{type:'pie',radius:['45%','72%'],center:['50%','45%'],label:{fontSize:10},emphasis:{label:{fontSize:13}},
+    data:[{value:28,name:'运营商A',itemStyle:{color:C.blue}},{value:22,name:'运营商B',itemStyle:{color:'#60a5fa'}},{value:18,name:'运营商C',itemStyle:{color:C.green}},{value:14,name:'运营商D',itemStyle:{color:'#34d399'}},{value:10,name:'运营商E',itemStyle:{color:C.orange}},{value:8,name:'其他7家',itemStyle:{color:C.gray}}]
+  }]
+});
+
+// ---- 高峰时段供给缺口 ----
+initChart('chPeakGap',{
+  tooltip:{trigger:'axis'},
+  legend:{data:['供给能力','实际需求'],bottom:0},
+  grid:{left:50,right:20,top:15,bottom:30},
+  xAxis:{type:'category',data:['18:00','19:00','20:00','21:00','22:00'],axisLabel:{fontSize:10}},
+  yAxis:{type:'value',name:'充电量(万kWh)',axisLabel:{fontSize:10}},
+  series:[
+    {name:'供给能力',type:'bar',data:[8.5,8.5,8.3,8.0,7.8],itemStyle:{color:C.blue},barWidth:20},
+    {name:'实际需求',type:'bar',data:[9.8,11.2,10.5,9.2,8.5],itemStyle:{color:C.red},barWidth:20}
+  ]
+});
+
+// ---- 归因类型分布 ----
+initChart('chAttrPie',{
+  tooltip:{trigger:'item'},
+  legend:{bottom:0},
+  series:[{type:'pie',radius:'55%',center:['50%','45%'],label:{fontSize:10},
+    data:[{value:623,name:'设备故障',itemStyle:{color:'#e11d48'}},{value:418,name:'周边竞争',itemStyle:{color:C.red}},{value:356,name:'可达性下降',itemStyle:{color:C.orange}},{value:280,name:'业态变化',itemStyle:{color:C.purple}},{value:170,name:'价格因素',itemStyle:{color:C.green}}]
+  }]
+});
+
+// ---- 低效桩月度趋势 ----
+initChart('chAttrTrend',{
+  tooltip:{trigger:'axis'},
+  legend:{data:['设备故障','周边竞争','可达性下降','业态变化','价格因素'],bottom:0},
+  grid:{left:50,right:20,top:15,bottom:30},
+  xAxis:{type:'category',data:['1月','2月','3月','4月','5月','6月'],axisLabel:{fontSize:10}},
+  yAxis:{type:'value',name:'数量',axisLabel:{fontSize:10}},
+  series:[
+    {name:'设备故障',type:'line',data:[580,590,610,615,620,623],lineStyle:{color:'#e11d48'},itemStyle:{color:'#e11d48'},symbol:'circle',symbolSize:4},
+    {name:'周边竞争',type:'line',data:[320,345,370,390,405,418],lineStyle:{color:C.red},itemStyle:{color:C.red},symbol:'circle',symbolSize:4},
+    {name:'可达性下降',type:'line',data:[380,375,368,362,358,356],lineStyle:{color:C.orange},itemStyle:{color:C.orange},symbol:'circle',symbolSize:4},
+    {name:'业态变化',type:'line',data:[290,288,285,283,281,280],lineStyle:{color:C.purple},itemStyle:{color:C.purple},symbol:'circle',symbolSize:4},
+    {name:'价格因素',type:'line',data:[180,175,172,170,170,170],lineStyle:{color:C.green},itemStyle:{color:C.green},symbol:'circle',symbolSize:4}
+  ]
+});
+
+// ---- 偏离度分布 ----
+initChart('chDeviation',{
+  tooltip:{trigger:'axis'},
+  legend:{data:['站点数量','累计占比'],bottom:0},
+  grid:{left:50,right:50,top:15,bottom:30},
+  xAxis:{type:'category',data:['<5%','5-10%','10-15%','15-20%','20-30%','>30%'],axisLabel:{fontSize:10,rotate:15}},
+  yAxis:[{type:'value',name:'站点数',axisLabel:{fontSize:10}},{type:'value',name:'累计占比',axisLabel:{fontSize:10,formatter:'{value}%'}}],
+  series:[
+    {name:'站点数量',type:'bar',data:[18200,2800,716,410,280,194],itemStyle:{color:C.blue},barWidth:24},
+    {name:'累计占比',type:'line',yAxisIndex:1,data:[78.8,90.9,94.0,95.8,97.0,97.8],lineStyle:{color:C.red},itemStyle:{color:C.red},symbol:'circle',symbolSize:6}
+  ]
+});
+
+// ---- 各运营商偏离度 ----
+initChart('chOpDeviation',{
+  tooltip:{trigger:'axis'},
+  grid:{left:50,right:20,top:15,bottom:30},
+  xAxis:{type:'category',data:['A','B','C','D','E','F','G','H','I','J','K','L'],axisLabel:{fontSize:10}},
+  yAxis:{type:'value',name:'偏离>15%站点占比(%)',axisLabel:{fontSize:10}},
+  series:[{type:'bar',data:[3.2,5.1,2.8,8.3,4.5,6.7,2.1,12.5,3.9,5.8,4.2,7.1],
+    itemStyle:{color:function(p){return p.value>8?C.red:p.value>5?C.orange:C.blue}},barWidth:16}]
+});
+
+// ---- 月度异常趋势 ----
+initChart('chAbnormalTrend',{
+  tooltip:{trigger:'axis'},
+  legend:{data:['偏离>15%','API状态矛盾'],bottom:0},
+  grid:{left:50,right:20,top:15,bottom:30},
+  xAxis:{type:'category',data:['1月','2月','3月','4月','5月','6月'],axisLabel:{fontSize:10}},
+  yAxis:{type:'value',name:'站点数',axisLabel:{fontSize:10}},
+  series:[
+    {name:'偏离>15%',type:'line',data:[2100,2050,1980,1950,1924,1924],lineStyle:{color:C.red},itemStyle:{color:C.red},symbol:'circle',symbolSize:6,areaStyle:{color:'rgba(239,68,68,0.06)'}},
+    {name:'API状态矛盾',type:'line',data:[55,53,52,50,48,47],lineStyle:{color:C.orange},itemStyle:{color:C.orange},symbol:'circle',symbolSize:6}
+  ]
+});
+
+// ---- 报告：供需比月度变化 ----
+initChart('chRptSupply',{
+  tooltip:{trigger:'axis'},
+  legend:{data:['4月','5月','6月'],bottom:0},
+  grid:{left:50,right:20,top:15,bottom:30},
+  xAxis:{type:'category',data:['浦东','闵行','宝山','松江','嘉定','青浦','奉贤','杨浦','徐汇','长宁'],axisLabel:{fontSize:9,rotate:30}},
+  yAxis:{type:'value',name:'供需比',min:0.3,axisLabel:{fontSize:10}},
+  series:[
+    {name:'4月',type:'line',data:[1.15,0.74,0.65,0.48,0.82,0.56,0.52,0.69,1.20,1.18],lineStyle:{color:C.gray},symbol:'circle',symbolSize:5},
+    {name:'5月',type:'line',data:[1.15,0.73,0.64,0.45,0.81,0.53,0.51,0.68,1.21,1.18],lineStyle:{color:C.orange},symbol:'circle',symbolSize:5},
+    {name:'6月',type:'line',data:[1.15,0.72,0.63,0.42,0.81,0.51,0.51,0.68,1.21,1.18],lineStyle:{color:C.blue},symbol:'circle',symbolSize:5}
+  ]
+});
+
+// ---- 报告：归因对比Q1vsQ2 ----
+initChart('chRptAttr',{
+  tooltip:{trigger:'axis'},
+  legend:{data:['Q1','Q2'],bottom:0},
+  grid:{left:50,right:20,top:15,bottom:30},
+  xAxis:{type:'category',data:['设备故障','周边竞争','可达性下降','业态变化','价格因素'],axisLabel:{fontSize:10}},
+  yAxis:{type:'value',name:'数量',axisLabel:{fontSize:10}},
+  series:[
+    {name:'Q1',type:'bar',data:[610,370,362,283,172],itemStyle:{color:'#cbd5e1'},barWidth:18},
+    {name:'Q2',type:'bar',data:[623,418,356,280,170],itemStyle:{color:C.blue},barWidth:18}
+  ]
+});
+
+// =============================================================
+// 窗口大小变化时重绘地图
+// =============================================================
+function resizeMaps(){
+  map1.invalidateSize();
+  map2.invalidateSize();
+}
+window.addEventListener('resize',function(){setTimeout(resizeMaps,150)});
+
+// Tab切换到供需全景时重绘地图
+document.querySelectorAll('#navLinks span').forEach(function(s){
+  s.addEventListener('click',function(){
+    if(this.dataset.tab==='supply'){setTimeout(function(){map1.invalidateSize()},200)}
+    if(this.dataset.tab==='attribution'){setTimeout(function(){map2.invalidateSize()},200)}
+  });
+});
+</script>
+</body>
+</html>
