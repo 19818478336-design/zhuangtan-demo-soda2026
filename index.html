@@ -46,14 +46,14 @@ body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;bac
 
 .card{background:#fff;border-radius:8px;border:1px solid #e8ecf1;overflow:hidden}
 .card-hd{padding:14px 18px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:#1e293b}
-.card-bd{padding:14px}
-.card-bd0{padding:0}
+.card-bd{padding:14px;overflow-x:auto}
+.card-bd0{padding:0;overflow-x:auto}
 
-.chart{width:100%}
+.chart{width:100%;overflow:hidden}
 .chart.h420{height:420px}.chart.h360{height:360px}.chart.h300{height:300px}.chart.h260{height:260px}.chart.h220{height:220px}
 
 /* ===== 表格 ===== */
-.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl{width:100%;min-width:500px;border-collapse:collapse;font-size:12px;table-layout:auto}
 .tbl th{background:#f8fafc;color:#64748b;font-weight:600;padding:9px 12px;border-bottom:2px solid #e8ecf1;text-align:left;font-size:11px;letter-spacing:0.3px}
 .tbl td{padding:8px 12px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:top}
 .tbl tr:hover td{background:#f8fafc}
@@ -489,7 +489,7 @@ document.querySelectorAll('#navLinks span').forEach(s=>{
 // Leaflet 地图1：供需热力
 // =============================================================
 var map1=L.map('map').setView([31.23,121.47],11);
-L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:'1234',attribution:'&copy; 高德地图',maxZoom:18}).addTo(map1);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:18}).addTo(map1);
 
 // 模拟网格数据点
 var gridData=[
@@ -531,7 +531,7 @@ gridData.forEach(function(d){
 // Leaflet 地图2：低效桩归因
 // =============================================================
 var map2=L.map('map2').setView([31.23,121.47],11);
-L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:'1234',attribution:'&copy; 高德地图',maxZoom:18}).addTo(map2);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:18}).addTo(map2);
 
 var attrData=[
   {lat:31.16,lng:121.42,type:'fault',name:'闵行某充电站',reason:'充电模块故障，离线14天'},
