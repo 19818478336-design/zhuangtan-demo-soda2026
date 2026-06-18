@@ -10,7 +10,6 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;background:#f0f2f5;color:#1e293b;font-size:14px;min-height:100vh}
@@ -951,87 +950,152 @@ function initCharts(){
 // PDF 导出
 // =============================================================
 function exportPDF(level){
-  if(!window.jspdf){alert('PDF库加载中，请稍后再试');return;}
-  var doc=new jspdf.jsPDF({unit:'mm',format:'a4'});
-  var pageW=210,pageH=297,margin=20,w=pageW-2*margin;
-  var y=margin,lineH=6;
-  var brandName='桩探 · 上海市充电设施跨运营商运行监测与决策支持平台';
-
-  function addHeader(title){
-    doc.setFontSize(9);doc.setTextColor(148,163,184);
-    doc.text(brandName,margin,y);y+=4;
-    doc.setDrawColor(226,232,240);doc.line(margin,y,pageW-margin,y);y+=6;
-    doc.setFontSize(16);doc.setTextColor(15,23,42);
-    doc.text(title,margin,y);y+=10;
-  }
-
-  function addText(text,size,color){
-    doc.setFontSize(size||10);doc.setTextColor(color||[71,85,105]);
-    var lines=doc.splitTextToSize(text,w);
-    lines.forEach(function(l){doc.text(l,margin,y);y+=lineH});
-    y+=2;
-  }
-
-  function addTable(headers,rows){
-    doc.setFontSize(7);var colW=w/headers.length;
-    doc.setFillColor(248,250,252);doc.setTextColor(71,85,105);
-    headers.forEach(function(h,i){doc.rect(margin+i*colW,y,colW,7,'F');doc.text(h,margin+i*colW+1,y+5)});
-    y+=7;
-    rows.forEach(function(row){
-      if(y>pageH-20){doc.addPage();y=margin}
-      row.forEach(function(cell,i){doc.text(String(cell),margin+i*colW+1,y+5)});
-      y+=5.5;
-    });
-    y+=4;
-  }
-
-  if(level==='L1'){
-    addHeader('L1 · 上海市充电设施运行状态总览 — 2026年Q2');
-    addText('核心摘要：Q2全市充电总量1,280万kWh（同比+18.3%），供需比均值0.82（较Q1+0.04），补贴申报合规率91.4%。需重点关注：松江、青浦、奉贤供给不足加剧；低效桩总量连续两季度上升；47个站点存在申报严重偏离。',9);
-    y+=4;
-    addTable(['指标','Q2数值','较Q1变化','说明'],
-      [['充电总量','1,280万kWh','+18.3%','同比'],
-       ['供需比均值','0.82','+0.04',''],
-       ['补贴合规率','91.4%','+1.7%',''],
-       ['低效桩','1,847个','+5.2%','需关注'],
-       ['供给不足网格','23个','−3个','治理见效'],
-       ['交叉验证异常','47个','—','需核查']]);
-    addText('决策建议：优先推动623个设备故障类低效桩修复（预计新增充电量1,246万kWh/年，节省新建投资1,500-2,400万元）；Q3重点核查运营商X的31个异常站点（涉及补贴约900万元）；松江九亭、青浦徐泾启动新建选址前期工作。',9);
-  } else {
-    // L2/L3/L4 simplified export
-    addHeader(level==='L2'?'L2 · 区域充电供需深度分析 — 2026年Q2':
-              level==='L3'?'L3 · 低效站点归因分析报告 — 2026年Q2':
-              'L4 · 度电补贴交叉核验报告 — 2026年Q2');
-    addText('本报告由「桩探」平台自动生成，数据来源：市级充电量平台、运营商公开API、高德/百度地图开放平台、12345市民热线、公开用户评论。报告时间：'+new Date().toLocaleDateString('zh-CN'),8,[148,163,184]);
-    y+=4;
-    if(level==='L2'){
-      addTable(['网格编号','区域','供需比','可修复桩','修复后供需比','建议路径'],
-        D.report.gridDecisions.map(function(r){return[r.id,r.district,r.ratio.toFixed(2),r.repairable+'个',r.afterRatio.toFixed(2),r.path]}));
-    }else if(level==='L3'){
-      addTable(['站点','区域','日均充电','区域均值','偏离度','归因','处置建议'],
-        D.attribution.tableData.slice(0,8).map(function(r){return[r.station,r.district,r.daily+'kWh',r.avg+'kWh',r.dev,r.tags.join('/'),r.action]}));
-    }else{
-      addTable(['站点','运营商','申报(万kWh)','基准(万kWh)','偏离度','核查建议'],
-        D.verify.anomalyTable.map(function(r){return[r.station,r.operator,r.reported,r.baseline,r.deviation,r.advice]}));
-    }
-    addText('免责声明：本报告基于公开可获取数据自动生成，数据质量问题已在"数据质量与平台运行状态"章节中标注。报告中运营商名称已做匿名化处理。',7,[148,163,184]);
-  }
-
-  // 页脚
-  doc.setFontSize(7);doc.setTextColor(148,163,184);
-  var footer='「桩探」v4.1 · 数据驱动的行业分析报告引擎 · 数据自动刷新，报告自动生成';
-  doc.text(footer,margin,pageH-10);
-
-  var now=new Date();
-  var ts=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate()+'_'+now.getHours()+now.getMinutes();
-  doc.save('桩探_'+level+'_2026Q2_'+ts+'.pdf');
-
   // 视觉反馈
   var cards=document.querySelectorAll('.export-card');
-  if(level==='L1') flashCard(cards[0]);
-  else if(level==='L2') flashCard(cards[1]);
-  else if(level==='L3') flashCard(cards[2]);
-  else flashCard(cards[3]);
+  var idx = level==='L1'?0:level==='L2'?1:level==='L3'?2:3;
+  flashCard(cards[idx]);
+
+  // 从当前数据构建报告内容
+  var now=new Date();
+  var ts=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+  var timeStr=now.toLocaleString('zh-CN');
+  var s = D.stats;
+  var titles = {
+    'L1': '上海市充电设施运行状态总览',
+    'L2': '区域充电供需深度分析',
+    'L3': '低效站点归因分析报告',
+    'L4': '度电补贴交叉核验报告'
+  };
+  var title = '「桩探」'+titles[level]+' — 2026年Q2';
+
+  // 构建表格HTML
+  function tbl(headers, rows){
+    var h='<table><thead><tr>';
+    headers.forEach(function(hdr){h+='<th>'+hdr+'</th>'});
+    h+='</tr></thead><tbody>';
+    rows.forEach(function(row){
+      h+='<tr>';
+      row.forEach(function(cell){h+='<td>'+String(cell)+'</td>'});
+      h+='</tr>';
+    });
+    h+='</tbody></table>';
+    return h;
+  }
+
+  var bodyHtml='';
+
+  if(level==='L1'){
+    bodyHtml='<div class="summary-box"><h3>一、核心摘要</h3>'+
+      '<p>Q2全市充电总量<b>1,280万kWh</b>（同比+18.3%），供需比均值<b>0.82</b>（较Q1+0.04），补贴申报合规率<b>91.4%</b>。</p>'+
+      '<p>⚠ 三个重点关注信号：①松江、青浦、奉贤供给不足加剧；②低效桩总量连续两季度上升至1,847个；③47个站点存在申报严重偏离。</p></div>'+
+      '<h3>二、关键指标</h3>'+
+      tbl(['指标','Q2数值','较Q1变化','说明'],
+        [['充电总量','1,280万kWh','+18.3%','同比'],
+         ['供需比均值','0.82','+0.04','需求增长快于供给'],
+         ['补贴合规率','91.4%','+1.7%','核验覆盖扩大'],
+         ['低效桩总数','1,847个','+5.2%','需持续关注'],
+         ['供给不足网格','23个','−3个','治理见效'],
+         ['交叉验证异常','47个','—','新增发现']])+
+      '<h3>三、补贴合规概览</h3>'+
+      '<p>运营商申报数据与D1基准偏离度>15%的站点占比<b>8.3%</b>。时序偏离是主要异常类型，涉及补贴金额约900万元。状态矛盾类异常（API显示故障但申报有充电记录）共47个站点，需专项核查。</p>'+
+      '<h3>四、决策建议</h3>'+
+      '<ol><li>优先推动623个设备故障类低效桩修复，预计新增充电量1,246万kWh/年，节省新建投资1,500-2,400万元</li>'+
+      '<li>Q3重点核查高偏离度运营商2家，涉及异常站点31个，预估财政风险敞口约900万元</li>'+
+      '<li>松江九亭、青浦徐泾等供给不足网格启动新建选址评估</li>'+
+      '<li>建议将存量修复纳入区级充电设施考核指标，存量优化优先于增量扩张</li></ol>';
+  } else if(level==='L2'){
+    var gridRows = (D.report&&D.report.gridDecisions||D.supply.districtTable||[]).slice(0,15);
+    bodyHtml='<h3>一、区域供需概况</h3>'+
+      '<p>Q2对全市30个1km×1km网格进行供需分析，其中供给不足网格<b>'+s.supply.shortageGrids+'个</b>，供需偏紧网格<b>'+s.supply.tightGrids+'个</b>，供给过剩网格<b>'+s.supply.excessGrids+'个</b>。</p>'+
+      '<h3>二、各区网格供需分析</h3>'+
+      tbl(['区域','总桩数','平均供需比','不足','偏紧','平衡','过剩'],
+        (D.supply.districtTable||[]).map(function(d){
+          return [d.district, d.totalPiles, d.avgRatio, d.shortage, d.tight, d.balanced, d.excess];
+        }))+
+      '<h3>三、供给不足区域优先级</h3>'+
+      tbl(['网格','区域','供需比','可修复桩','修复后供需比','建议'],
+        gridRows.map(function(r){
+          var ratio = typeof r.ratio==='number'?r.ratio:parseFloat(r.avgRatio||r.ratio||0);
+          return [r.id||r.district, r.district, (ratio).toFixed(2),
+            (r.repairable||'?')+'个', Math.min(1.2,ratio+0.3).toFixed(2),
+            ratio<0.5?'存量修复+新建':ratio<0.8?'存量修复为主':'维持现状'];
+        }))+
+      '<h3>四、新建选址优先级排序</h3>'+
+      '<p>基于供需缺口(35%)、土地可用性(25%)、交通可达性(20%)、电力接入(10%)、与已有桩距离(10%)五因素评分模型。松江九亭(评分88)、青浦徐泾(85)、金山石化(82)为新建选址Top3。松江九亭、青浦徐泾存在可修复低效桩，修复后预计满足缺口62%，建议存量优先。</p>';
+  } else if(level==='L3'){
+    var attrRows = (D.attribution.tableData||[]).slice(0,12);
+    bodyHtml='<h3>一、低效桩总体情况</h3>'+
+      '<p>Q2共识别低效充电桩<b>1,847个</b>，其中设备故障<b>623个(33.7%)</b>、周边竞争<b>418个(22.6%)</b>、可达性变化<b>356个(19.3%)</b>、业态变化<b>280个(15.2%)</b>、价格因素<b>170个(9.2%)</b>。</p>'+
+      '<h3>二、高优先级站点归因详情</h3>'+
+      tbl(['站点','区域','利用率','归因标签','优先级','处置建议'],
+        attrRows.map(function(r){
+          var util = typeof r.utilization==='number'?r.utilization:(parseFloat(r.daily)||0)/100;
+          return [r.station, r.district, (util*100).toFixed(0)+'%', r.tags?r.tags.join('/'):r.attribution_tag,
+            r.priority||r.repair_priority, r.action||r.suggestion];
+        }))+
+      '<h3>三、归因分布分析</h3>'+
+      '<p>设备故障类占比最高(33.7%)，主要集中在服役超5年的老旧设备。周边竞争类(22.6%)反映新建桩缺乏区域供需统筹，部分区域出现过度建设。可达性变化(19.3%)中约半数与道路施工相关，为临时性因素，预计3-6个月恢复。</p>'+
+      '<h3>四、修复进度追踪</h3>'+
+      tbl(['站点','修复进度','预计完成'],
+        (D.attribution.repairProgress||[]).map(function(r){return [r.site, r.progress+'%', r.eta]}));
+  } else if(level==='L4'){
+    var anomRows = D.verify.anomalyTable||[];
+    bodyHtml='<h3>一、核验总览</h3>'+
+      '<p>Q2对<b>'+s.verify.operatorCount+'家</b>运营商申报数据进行多源交叉验证。偏离度>15%的高风险异常占比<b>'+s.verify.highDeviationRate+'%</b>，合规率<b>'+s.verify.normalRate+'%</b>。发现状态矛盾（API故障但申报充电）站点<b>'+s.verify.contradictionSites+'个</b>。</p>'+
+      '<h3>二、异常申报详情</h3>'+
+      tbl(['站点/区域','运营商','申报(万kWh)','基准(万kWh)','偏离度','异常类型','核查建议'],
+        anomRows.map(function(r){return [r.station, r.operator, r.reported, r.baseline, r.deviation, r.type||r.anomaly_type, r.advice||r.detail]}))+
+      '<h3>三、交叉验证方法</h3>'+
+      '<ol><li><b>时序一致性</b>：运营商申报月度充电量 vs D1平台记录趋势比对，偏离度>15%标记异常</li>'+
+      '<li><b>状态一致性</b>：运营商API显示"故障"的桩却在申报数据中有充电记录，直接标记异常</li>'+
+      '<li><b>空间一致性</b>：区域级运营商申报总量 vs D1平台同区域记录总量比对</li>'+
+      '<li><b>用户信号校验</b>：负面投诉激增与充电量异常下降交叉标记</li></ol>'+
+      '<h3>四、核查建议</h3>'+
+      '<p>建议对偏离度>15%的2家运营商启动度电补贴数据复核程序。47个状态矛盾站点建议实地核查。Q2补贴发放可基于本核验报告进行差异化处理——合规率>95%的运营商按申报全额发放，合规率85-95%的按90%发放，合规率<85%的暂缓发放待核查后再定。</p>';
+  }
+
+  // 构建完整报告HTML
+  var reportHtml = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>'+title+'</title>'+
+    '<style>'+
+    '*{margin:0;padding:0;box-sizing:border-box}'+
+    'body{font-family:"PingFang SC","Microsoft YaHei","SimSun",sans-serif;color:#1e293b;font-size:13px;line-height:1.8;padding:40px 50px;max-width:210mm;margin:0 auto}'+
+    '.report-head{border-bottom:3px solid #2563eb;padding-bottom:16px;margin-bottom:24px}'+
+    '.report-head h1{font-size:22px;color:#0f172a;margin-bottom:6px}'+
+    '.report-head .meta{font-size:11px;color:#94a3b8}'+
+    'h3{font-size:15px;color:#0f172a;margin:22px 0 10px;padding-left:10px;border-left:3px solid #2563eb}'+
+    'p{margin:8px 0;text-indent:0}'+
+    'b{color:#0f172a}'+
+    'table{width:100%;border-collapse:collapse;margin:12px 0;font-size:11px}'+
+    'th{background:#f1f5f9;color:#475569;font-weight:600;padding:8px 10px;border:1px solid #e2e8f0;text-align:left}'+
+    'td{padding:7px 10px;border:1px solid #e2e8f0;color:#334155}'+
+    'tr:nth-child(even) td{background:#fafbfc}'+
+    '.summary-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:16px;margin:12px 0}'+
+    '.summary-box h3{margin-top:0;border-left-color:#3b82f6}'+
+    'ol,ul{margin:8px 0;padding-left:24px}'+
+    'li{margin:4px 0}'+
+    '.report-foot{border-top:1px solid #e2e8f0;margin-top:24px;padding-top:12px;font-size:10px;color:#94a3b8}'+
+    '@media print{body{padding:20px 30px}'+
+    '@page{size:A4;margin:15mm}'+
+    '}</style></head><body>'+
+    '<div class="report-head"><h1>'+title+'</h1>'+
+    '<div class="meta">「桩探」数据驱动的行业分析报告引擎 · 报告生成时间：'+timeStr+' · 数据来源：D1市级充电量平台 / D2运营商公开API / D3高德百度地图 / D4 12345热线 / D5用户评论</div></div>'+
+    bodyHtml+
+    '<div class="report-foot"><p>本报告由「桩探」平台自动生成。数据基于公开可获取来源，分析结果仅供参考。报告中运营商数据已做匿名化处理。</p>'+
+    '<p>© 桩探 · SODA 2026 · v2.0 · '+ts+'</p></div>'+
+    '</body></html>';
+
+  // 在新窗口中打开并自动打印
+  var w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(reportHtml);
+  w.document.close();
+  // 等待渲染完成后触发打印
+  setTimeout(function(){
+    w.print();
+    // 绿色闪烁反馈
+    var cards=document.querySelectorAll('.export-card');
+    var idx = level==='L1'?0:level==='L2'?1:level==='L3'?2:3;
+    flashCard(cards[idx]);
+  }, 600);
 }
 
 function flashCard(el){
