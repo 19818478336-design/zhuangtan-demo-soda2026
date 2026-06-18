@@ -1,0 +1,212 @@
+{
+  "meta": {
+    "version": "4.1",
+    "lastUpdated": "2026-06-18T15:00:00+08:00",
+    "dataSources": ["市级充电量平台", "运营商公开API", "高德/百度地图开放平台", "12345市民热线", "公开用户评论"]
+  },
+  "stats": {
+    "supply": {
+      "totalPiles": 231000,
+      "shortageGrids": 23,
+      "tightGrids": 37,
+      "vehiclePileRatio": "1.7:1",
+      "utilizationRate": 68,
+      "excessGrids": 16
+    },
+    "attribution": {
+      "totalLowEfficiency": 1847,
+      "faultCount": 623,
+      "competeCount": 418,
+      "accessCount": 356,
+      "bizCount": 280,
+      "priceCount": 170
+    },
+    "verify": {
+      "operatorCount": 12,
+      "highDeviationRate": 8.3,
+      "midDeviationRate": 3.1,
+      "normalRate": 88.6,
+      "contradictionSites": 47,
+      "reportCycle": "季度"
+    }
+  },
+  "supply": {
+    "gridData": [
+      {"lat": 31.15, "lng": 121.23, "type": "shortage", "name": "松江九亭", "ratio": 0.42},
+      {"lat": 31.13, "lng": 121.28, "type": "shortage", "name": "青浦徐泾", "ratio": 0.45},
+      {"lat": 31.20, "lng": 121.35, "type": "shortage", "name": "闵行浦江镇南", "ratio": 0.48},
+      {"lat": 31.28, "lng": 121.38, "type": "shortage", "name": "宝山顾村西", "ratio": 0.49},
+      {"lat": 31.18, "lng": 121.42, "type": "tight", "name": "闵行莘庄", "ratio": 0.55},
+      {"lat": 31.32, "lng": 121.42, "type": "tight", "name": "宝山杨行", "ratio": 0.58},
+      {"lat": 31.25, "lng": 121.50, "type": "tight", "name": "浦东金桥", "ratio": 0.62},
+      {"lat": 31.08, "lng": 121.30, "type": "tight", "name": "松江新城", "ratio": 0.65},
+      {"lat": 31.35, "lng": 121.25, "type": "tight", "name": "嘉定新城", "ratio": 0.68},
+      {"lat": 31.23, "lng": 121.47, "type": "balanced", "name": "浦东陆家嘴", "ratio": 0.95},
+      {"lat": 31.20, "lng": 121.43, "type": "balanced", "name": "徐汇田林", "ratio": 1.05},
+      {"lat": 31.22, "lng": 121.40, "type": "balanced", "name": "长宁天山", "ratio": 1.10},
+      {"lat": 31.27, "lng": 121.52, "type": "balanced", "name": "浦东花木", "ratio": 0.92},
+      {"lat": 31.19, "lng": 121.45, "type": "excess", "name": "徐汇漕河泾", "ratio": 1.35},
+      {"lat": 31.21, "lng": 121.39, "type": "excess", "name": "长宁虹桥", "ratio": 1.28}
+    ],
+    "districtTable": [
+      {"district": "浦东新区", "piles": 62100, "dailyKwh": 48.5, "ratio": "1.4:1", "supplyDemand": 1.15, "status": "平衡", "action": "存量优化，局部调整"},
+      {"district": "闵行区", "piles": 28300, "dailyKwh": 22.1, "ratio": "1.8:1", "supplyDemand": 0.72, "status": "偏紧", "action": "优先修复低效桩"},
+      {"district": "宝山区", "piles": 19800, "dailyKwh": 14.3, "ratio": "2.0:1", "supplyDemand": 0.63, "status": "偏紧", "action": "存量优化 + 适度新建"},
+      {"district": "松江区", "piles": 16200, "dailyKwh": 10.8, "ratio": "2.2:1", "supplyDemand": 0.48, "status": "严重不足", "action": "优先启动新建选址"},
+      {"district": "嘉定区", "piles": 18500, "dailyKwh": 14.1, "ratio": "1.7:1", "supplyDemand": 0.81, "status": "平衡", "action": "维持现状"},
+      {"district": "杨浦区", "piles": 11400, "dailyKwh": 8.9, "ratio": "1.9:1", "supplyDemand": 0.68, "status": "偏紧", "action": "存量优化优先"},
+      {"district": "青浦区", "piles": 14700, "dailyKwh": 9.6, "ratio": "2.3:1", "supplyDemand": 0.55, "status": "偏紧", "action": "存量 + 新建并行"},
+      {"district": "奉贤区", "piles": 12900, "dailyKwh": 8.2, "ratio": "2.4:1", "supplyDemand": 0.51, "status": "偏紧", "action": "存量优化优先"},
+      {"district": "徐汇区", "piles": 10800, "dailyKwh": 9.8, "ratio": "1.3:1", "supplyDemand": 1.21, "status": "过剩", "action": "建议限制新建"},
+      {"district": "长宁区", "piles": 9200, "dailyKwh": 8.1, "ratio": "1.3:1", "supplyDemand": 1.18, "status": "平衡", "action": "维持现状"}
+    ],
+    "charts": {
+      "supplyTrend": {
+        "months": ["1月","2月","3月","4月","5月","6月"],
+        "cityAvg": [0.78, 0.80, 0.79, 0.81, 0.80, 0.82],
+        "songjiang": [0.52, 0.50, 0.48, 0.46, 0.44, 0.42],
+        "qingpu": [0.58, 0.56, 0.54, 0.50, 0.48, 0.45],
+        "fengxian": [0.60, 0.58, 0.56, 0.54, 0.52, 0.51]
+      },
+      "operatorShare": [
+        {"name": "运营商A", "value": 28},
+        {"name": "运营商B", "value": 22},
+        {"name": "运营商C", "value": 18},
+        {"name": "运营商D", "value": 14},
+        {"name": "运营商E", "value": 10},
+        {"name": "其他7家", "value": 8}
+      ],
+      "peakGap": {
+        "hours": ["18:00","19:00","20:00","21:00","22:00"],
+        "supply": [8.5, 8.5, 8.3, 8.0, 7.8],
+        "demand": [9.8, 11.2, 10.5, 9.2, 8.5]
+      }
+    }
+  },
+  "attribution": {
+    "mapData": [
+      {"lat": 31.16, "lng": 121.42, "type": "fault", "name": "闵行某充电站", "reason": "充电模块故障，离线14天"},
+      {"lat": 31.24, "lng": 121.50, "type": "fault", "name": "浦东某充电站", "reason": "屏幕碎裂，4枪仅1枪可用"},
+      {"lat": 31.30, "lng": 121.38, "type": "compete", "name": "宝山某充电站", "reason": "500m内新开竞品站，价格低0.3元/度"},
+      {"lat": 31.19, "lng": 121.35, "type": "compete", "name": "青浦某充电站", "reason": "周边新增12个快充桩，分流严重"},
+      {"lat": 31.09, "lng": 121.25, "type": "access", "name": "松江某充电站", "reason": "入口道路施工封闭，需绕行1.2km"},
+      {"lat": 31.33, "lng": 121.43, "type": "access", "name": "宝山某充电站", "reason": "停车场入口改为单行道，进出困难"},
+      {"lat": 31.26, "lng": 121.37, "type": "biz", "name": "嘉定某充电站", "reason": "周边办公楼空置率上升，通勤充电需求减半"},
+      {"lat": 31.15, "lng": 121.50, "type": "biz", "name": "浦东某充电站", "reason": "周边商场停业，购物充电需求归零"},
+      {"lat": 31.22, "lng": 121.32, "type": "price", "name": "闵行某充电站", "reason": "收费2.1元/度，周边均价1.5元/度"},
+      {"lat": 31.28, "lng": 121.48, "type": "fault", "name": "浦东某充电站", "reason": "充电枪老化，实际功率仅为标称40%"},
+      {"lat": 31.12, "lng": 121.38, "type": "compete", "name": "闵行某充电站", "reason": "竞品站开业促销，免费充电1个月"},
+      {"lat": 31.35, "lng": 121.30, "type": "access", "name": "嘉定某充电站", "reason": "周边道路改为步行街，车辆无法进入"}
+    ],
+    "tableData": [
+      {"station": "闵行某充电站A", "district": "闵行区", "operator": "运营商X", "daily": 38, "avg": 165, "dev": "−77%", "tags": ["设备故障"], "tagCls": ["tag-fault"], "action": "通知运营商紧急修复"},
+      {"station": "宝山某充电站B", "district": "宝山区", "operator": "运营商Y", "daily": 42, "avg": 158, "dev": "−73%", "tags": ["周边竞争"], "tagCls": ["tag-comp"], "action": "评估差异化运营方案"},
+      {"station": "松江某充电站C", "district": "松江区", "operator": "运营商Z", "daily": 55, "avg": 172, "dev": "−68%", "tags": ["可达性下降","业态变化"], "tagCls": ["tag-access","tag-biz"], "action": "协调交通部门联合评估"},
+      {"station": "浦东某充电站D", "district": "浦东新区", "operator": "运营商X", "daily": 210, "avg": 380, "dev": "−45%", "tags": ["设备故障"], "tagCls": ["tag-fault"], "action": "督促运营商修复枪体"},
+      {"station": "青浦某充电站E", "district": "青浦区", "operator": "运营商Y", "daily": 35, "avg": 142, "dev": "−75%", "tags": ["周边竞争","价格因素"], "tagCls": ["tag-comp","tag-price"], "action": "评估价格与服务差异化"},
+      {"station": "嘉定某充电站F", "district": "嘉定区", "operator": "运营商Z", "daily": 48, "avg": 155, "dev": "−69%", "tags": ["业态变化"], "tagCls": ["tag-biz"], "action": "持续监测，若恶化建议撤点"},
+      {"station": "奉贤某充电站G", "district": "奉贤区", "operator": "运营商X", "daily": 62, "avg": 140, "dev": "−56%", "tags": ["可达性下降"], "tagCls": ["tag-access"], "action": "协调改善进出通道条件"},
+      {"station": "杨浦某充电站H", "district": "杨浦区", "operator": "运营商Y", "daily": 88, "avg": 175, "dev": "−50%", "tags": ["价格因素"], "tagCls": ["tag-price"], "action": "建议调价至区域均价水平"},
+      {"station": "浦东某充电站I", "district": "浦东新区", "operator": "运营商Z", "daily": 95, "avg": 360, "dev": "−74%", "tags": ["周边竞争","设备故障"], "tagCls": ["tag-comp","tag-fault"], "action": "修复设备 + 评估竞争应对"},
+      {"station": "闵行某充电站J", "district": "闵行区", "operator": "运营商X", "daily": 28, "avg": 168, "dev": "−83%", "tags": ["可达性下降"], "tagCls": ["tag-access"], "action": "周边道路施工预计2月后恢复"}
+    ],
+    "charts": {
+      "attrPie": [
+        {"name": "设备故障", "value": 623},
+        {"name": "周边竞争", "value": 418},
+        {"name": "可达性下降", "value": 356},
+        {"name": "业态变化", "value": 280},
+        {"name": "价格因素", "value": 170}
+      ],
+      "attrTrend": {
+        "months": ["1月","2月","3月","4月","5月","6月"],
+        "fault": [580, 590, 610, 615, 620, 623],
+        "compete": [320, 345, 370, 390, 405, 418],
+        "access": [380, 375, 368, 362, 358, 356],
+        "biz": [290, 288, 285, 283, 281, 280],
+        "price": [180, 175, 172, 170, 170, 170]
+      }
+    },
+    "repairProgress": [
+      {"name": "浦东新区 · 设备故障桩修复", "done": 51, "total": 238, "pct": 21},
+      {"name": "闵行区 · 设备故障桩修复", "done": 17, "total": 115, "pct": 15},
+      {"name": "宝山区 · 设备故障桩修复", "done": 27, "total": 89, "pct": 30},
+      {"name": "松江区 · 设备故障桩修复", "done": 18, "total": 72, "pct": 25},
+      {"name": "嘉定区 · 设备故障桩修复", "done": 17, "total": 58, "pct": 29},
+      {"name": "其他区域 · 设备故障桩修复", "done": 70, "total": 251, "pct": 28}
+    ]
+  },
+  "verify": {
+    "anomalyTable": [
+      {"station": "闵行浦江充电站A", "operator": "运营商X", "reported": 12.5, "baseline": 8.9, "deviation": "+40.4%", "signals": ["API状态矛盾"], "advice": "重点核查", "level": "high"},
+      {"station": "松江九亭充电站B", "operator": "运营商Y", "reported": 8.2, "baseline": 8.0, "deviation": "+2.5%", "signals": [], "advice": "正常", "level": "normal"},
+      {"station": "宝山顾村充电站C", "operator": "运营商X", "reported": 6.8, "baseline": 4.2, "deviation": "+61.9%", "signals": ["时序异常", "投诉集中"], "advice": "重点核查", "level": "high"},
+      {"station": "嘉定安亭充电站D", "operator": "运营商Z", "reported": 15.1, "baseline": 14.8, "deviation": "+2.0%", "signals": [], "advice": "正常", "level": "normal"},
+      {"station": "青浦徐泾充电站E", "operator": "运营商Y", "reported": 5.4, "baseline": 3.8, "deviation": "+42.1%", "signals": ["空间偏离"], "advice": "重点核查", "level": "high"},
+      {"station": "奉贤南桥充电站F", "operator": "运营商Z", "reported": 9.8, "baseline": 9.6, "deviation": "+2.1%", "signals": [], "advice": "正常", "level": "normal"},
+      {"station": "浦东张江充电站G", "operator": "运营商X", "reported": 18.2, "baseline": 13.1, "deviation": "+38.9%", "signals": ["API状态矛盾", "投诉集中"], "advice": "重点核查", "level": "high"},
+      {"station": "杨浦五角场充电站H", "operator": "运营商Y", "reported": 11.3, "baseline": 11.1, "deviation": "+1.8%", "signals": [], "advice": "正常", "level": "normal"}
+    ],
+    "charts": {
+      "deviation": {
+        "categories": ["＜5%","5%–10%","10%–15%","15%–20%","20%–30%","＞30%"],
+        "counts": [18200, 2800, 716, 410, 280, 194],
+        "cumPct": [78.8, 90.9, 94.0, 95.8, 97.0, 97.8]
+      },
+      "opDeviation": {
+        "operators": ["A","B","C","D","E","F","G","H","I","J","K","L"],
+        "rates": [3.2, 5.1, 2.8, 8.3, 4.5, 6.7, 2.1, 12.5, 3.9, 5.8, 4.2, 7.1]
+      },
+      "abnormalTrend": {
+        "months": ["1月","2月","3月","4月","5月","6月"],
+        "highDev": [2100, 2050, 1980, 1950, 1924, 1924],
+        "apiConflict": [55, 53, 52, 50, 48, 47]
+      }
+    }
+  },
+  "report": {
+    "q2Summary": {
+      "totalKwh": 1280,
+      "supplyDemandAvg": 0.82,
+      "complianceRate": 91.4,
+      "lowEffPiles": 1847,
+      "shortageGrids": 23,
+      "anomalySites": 47
+    },
+    "gridDecisions": [
+      {"id": "SH-SJ-003", "district": "松江九亭", "ratio": 0.42, "repairable": 18, "afterRatio": 0.61, "path": "存量优化 + 适度新建"},
+      {"id": "SH-QP-007", "district": "青浦徐泾", "ratio": 0.45, "repairable": 12, "afterRatio": 0.58, "path": "存量优化 + 适度新建"},
+      {"id": "SH-FX-011", "district": "奉贤南桥", "ratio": 0.51, "repairable": 22, "afterRatio": 0.72, "path": "存量优化即可"},
+      {"id": "SH-MH-005", "district": "闵行浦江", "ratio": 0.53, "repairable": 8, "afterRatio": 0.59, "path": "存量优化 + 适度新建"},
+      {"id": "SH-BS-002", "district": "宝山顾村", "ratio": 0.56, "repairable": 15, "afterRatio": 0.68, "path": "存量优化即可"}
+    ],
+    "auditSummary": {
+      "highDevPct": 8.3,
+      "highDevPrev": 9.6,
+      "contradictionSites": 47,
+      "contradictionPrev": 52,
+      "reviewedSites": 89,
+      "reviewedPrev": 76
+    },
+    "dataQuality": [
+      {"source": "市级充电量平台", "completeness": "99.2%", "timeliness": "日更新正常", "accuracy": "98.5%", "coverage": "全市 23.1 万桩", "status": "normal"},
+      {"source": "运营商公开API", "completeness": "87.3%", "timeliness": "实时", "accuracy": "85.1%", "coverage": "头部运营商全覆盖", "status": "warn"},
+      {"source": "高德/百度地图POI", "completeness": "98.8%", "timeliness": "准实时", "accuracy": "94.0%", "coverage": "全市POI", "status": "normal"},
+      {"source": "12345投诉", "completeness": "100%", "timeliness": "日更新", "accuracy": "88.5%", "coverage": "充电桩类投诉", "status": "warn"},
+      {"source": "公开用户评论", "completeness": "72.0%", "timeliness": "按需采集", "accuracy": "78.3%", "coverage": "多平台公开内容", "status": "warn"}
+    ],
+    "charts": {
+      "rptSupply": {
+        "districts": ["浦东","闵行","宝山","松江","嘉定","青浦","奉贤","杨浦","徐汇","长宁"],
+        "april": [1.15, 0.74, 0.65, 0.48, 0.82, 0.56, 0.52, 0.69, 1.20, 1.18],
+        "may": [1.15, 0.73, 0.64, 0.45, 0.81, 0.53, 0.51, 0.68, 1.21, 1.18],
+        "june": [1.15, 0.72, 0.63, 0.42, 0.81, 0.51, 0.51, 0.68, 1.21, 1.18]
+      },
+      "rptAttr": {
+        "categories": ["设备故障","周边竞争","可达性下降","业态变化","价格因素"],
+        "q1": [610, 370, 362, 283, 172],
+        "q2": [623, 418, 356, 280, 170]
+      }
+    }
+  }
+}
